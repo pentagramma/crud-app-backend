@@ -12,5 +12,5 @@ app.use(parser.urlencoded({extended:false}))
 app.use(cors())
 
 app.use('/api/v1/',router)
-console/log("Zahra Checking")
+
 module.exports = app
