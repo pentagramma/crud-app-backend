@@ -10,7 +10,6 @@ module.exports = {
   getAnswer: async (req, res) => {
     try {
       const question = req.params.question;
-      console.log(question)
       const completion = await openai.createCompletion({
         model: "text-davinci-003",
         prompt: question,
