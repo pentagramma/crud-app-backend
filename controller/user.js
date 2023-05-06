@@ -9,6 +9,7 @@ module.exports = {
                 status:"success",
                 message: "Signup Successful"
             })
+            console.log(newUser._id);
         }
         catch(e){
             res.status(404).send({

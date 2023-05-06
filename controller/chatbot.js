@@ -15,6 +15,8 @@ module.exports = {
         prompt: question,
         max_tokens: 512
       })
+
+      
       res.status(200).send({
         status:'success',
         message:completion.data.choices[0].text.trim()
