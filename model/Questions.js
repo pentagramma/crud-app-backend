@@ -7,7 +7,7 @@ const questionSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ["technology", "philosophy", "business", "GK", "other"],
+    enum: ["technology", "philosophy", "business"],
     required: true,
   },
   postedBy: {

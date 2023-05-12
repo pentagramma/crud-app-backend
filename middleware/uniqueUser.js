@@ -13,6 +13,7 @@ const uniqueUser = async (req,res,next)=>{
             })
         }
         else{
+            req.user = user[0]
             next()
         }
     }
