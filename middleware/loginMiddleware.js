@@ -4,9 +4,7 @@ const bcrypt = require('bcrypt')
 const loginMiddleware = async (req,res,next)=>{
     try{
         let {email,password} = req.body
-        console.log(email,password)
         let user = await UserModel.find({email:email})
-        console.log(user)
         if(user.length == 0){
             res.status(404).send({
                 status:"failed",
@@ -22,7 +20,7 @@ const loginMiddleware = async (req,res,next)=>{
             })
             return
         }
-        req.user = user
+        req.user = user[0]
         next()
     }
     catch(e){

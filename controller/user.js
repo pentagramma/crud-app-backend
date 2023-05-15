@@ -21,7 +21,7 @@ module.exports = {
   },
   loginUser: async (req, res) => {
     try {
-      let user = req.user;
+      let user = req.user
       let token = jwt.sign({_id:user._id,email:user.email,firstName:user.firstName,lastName:user.lastName}, process.env.JWT_SECRET, {
         expiresIn: "1h",
       });
