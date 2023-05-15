@@ -22,10 +22,10 @@ module.exports = {
   loginUser: async (req, res) => {
     try {
       let user = req.user;
-      let token = jwt.sign({_id:user._id,email:user.email,firstName:user.firstName}, process.env.JWT_SECRET, {
+      let token = jwt.sign({_id:user._id,email:user.email,firstName:user.firstName,lastName:user.lastName}, process.env.JWT_SECRET, {
         expiresIn: "1h",
       });
-      let refresh_token = jwt.sign({_id:user._id,email:user.email,firstName:user.firstName}, process.env.REFRESH_JWT_SECRET, {
+      let refresh_token = jwt.sign({_id:user._id,email:user.email,firstName:user.firstName,lastName:user.lastName}, process.env.REFRESH_JWT_SECRET, {
         expiresIn: "30d",
       });
       const newRefreshToken = new RefreshToken({
@@ -42,6 +42,16 @@ module.exports = {
         message: "login failed",
         error: e,
       });
+    }
+  },
+  getProfileDetail:async (req,res) =>{
+    try{
+      res.status(200).send({
+        user:req.user
+      })
+    }
+    catch(e){
+      res.status(400).json({ message: err.message });
     }
   },
   generateNewauthToken: async (req, res) => {
