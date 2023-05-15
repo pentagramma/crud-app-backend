@@ -7,22 +7,26 @@ const questionSchema = new mongoose.Schema({
   },
   category: {
     type: String,
-    enum: ["technology", "philosophy", "business"],
+    enum: ["Technology", "Philosophy", "Business","Other"],
     required: true,
   },
+  gpt_answer:{type:String,required:true},
+  ans_count: { type: Number, required: true,default:0 },
+  likes: { type: Number, required: true,default:0 },
   postedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "user",
+    ref: "Users",
     required: true,
   },
-  answers: [{
+  answers: [
+    {
       answer: {
         type: String,
         required: true,
       },
       postedBy: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "user",
+        ref: "Users",
         required: true,
       },
       timestamp: {
@@ -33,8 +37,9 @@ const questionSchema = new mongoose.Schema({
         type: Number,
         default: 0,
       },
-    },],
-});
+    },
+  ],
+},{timestamp:true});
 
 const Question = mongoose.model("Question", questionSchema);
 
