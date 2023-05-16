@@ -1,24 +1,23 @@
 const Question = require("../model/Questions");
-const {openai} = require('../utils/openaiConfiguration')
+const { openai } = require("../utils/openaiConfiguration");
 
-// Controller function to create a new question
 const createQuestion = async (req, res) => {
   try {
     const { question, category } = req.body;
-    const {_id} = req.user 
+    const { _id } = req.user;
 
     const gpt_answer = await openai.createCompletion({
       model: "text-davinci-003",
       prompt: question,
-      max_tokens: 512
-    })
+      max_tokens: 512,
+    });
 
     const newQuestion = await Question.create({
-      question:question,
-      category:category,
+      question: question,
+      category: category,
       postedBy: _id,
-      gpt_answer:gpt_answer.data.choices[0].text.trim(),
-      answers:[]
+      gpt_answer: gpt_answer.data.choices[0].text.trim(),
+      answers: [],
     });
 
     res.status(201).json({
@@ -75,7 +74,10 @@ const fetchQuestions = async (req, res) => {
   try {
     const { skip, limit } = req.query;
     const skipValue = (skip - 1) * limit;
-    const questions = await Question.find().skip(skipValue).limit(limit).populate("postedBy");
+    const questions = await Question.find()
+      .skip(skipValue)
+      .limit(limit)
+      .populate("postedBy");
     const totalCount = await Question.find().count();
     res.status(200).send({
       totalCount: totalCount,
@@ -83,8 +85,33 @@ const fetchQuestions = async (req, res) => {
     });
   } catch (e) {
     res.status(404).send({
-      message:e
-    })
+      message: e,
+    });
+  }
+};
+
+const retrieveQuestion = async (req, res) => {
+  try {
+    const questions = await Question.find({ postedBy: req.params.userId });
+
+    if (!questions) {
+      return res.status(404).json({
+        message: "Question not found",
+      });
+    }
+
+    res.status(200).json({
+      message: "Questions retrieved successfully",
+      questions: questions,
+    });
+
+    console.log(questions);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({
+      message: "Something went wrong",
+      error: err,
+    });
   }
 };
 
@@ -92,4 +119,5 @@ module.exports = {
   createQuestion,
   updateAnswer,
   fetchQuestions,
+  retrieveQuestion,
 };
