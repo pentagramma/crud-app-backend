@@ -21,15 +21,33 @@ module.exports = {
   },
   loginUser: async (req, res) => {
     try {
-      let user = req.user
-      let token = jwt.sign({_id:user._id,email:user.email,firstName:user.firstName,lastName:user.lastName}, process.env.JWT_SECRET, {
-        expiresIn: "1h",
-      });
-      let refresh_token = jwt.sign({_id:user._id,email:user.email,firstName:user.firstName,lastName:user.lastName}, process.env.REFRESH_JWT_SECRET, {
-        expiresIn: "30d",
-      });
+      let user = req.user;
+      let token = jwt.sign(
+        {
+          _id: user._id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+        },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: "1h",
+        }
+      );
+      let refresh_token = jwt.sign(
+        {
+          _id: user._id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+        },
+        process.env.REFRESH_JWT_SECRET,
+        {
+          expiresIn: "30d",
+        }
+      );
       const newRefreshToken = new RefreshToken({
-        refresh_token:refresh_token
+        refresh_token: refresh_token,
       });
       await newRefreshToken.save();
       res.status(200).send({
@@ -44,13 +62,12 @@ module.exports = {
       });
     }
   },
-  getProfileDetail:async (req,res) =>{
-    try{
+  getProfileDetail: async (req, res) => {
+    try {
       res.status(200).send({
-        user:req.user
-      })
-    }
-    catch(e){
+        user: req.user,
+      });
+    } catch (e) {
       res.status(400).json({ message: err.message });
     }
   },
@@ -63,15 +80,38 @@ module.exports = {
         return res.status(400).json({ message: "Need to login again" });
       }
       const user = req.user;
-      const authToken = jwt.sign({_id:user._id,email:user.email,firstName:user.firstName}, process.env.JWT_SECRET, {
-        expiresIn: "1h",
-      });
+      const authToken = jwt.sign(
+        { _id: user._id, email: user.email, firstName: user.firstName },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: "1h",
+        }
+      );
       return res.status(200).json({
         message: "new token generated",
         token: authToken,
       });
     } catch (e) {
       res.status(400).json({ message: err.message });
+    }
+  },
+  updateUser: async (req, res) => {
+    console.log("herer");
+    const { userId } = req.params;
+    const { firstName, lastName, email, companyName, designation } = req.body;
+    try {
+      console.log(req.body);
+      await UserModel.findByIdAndUpdate(userId, {
+        firstName,
+        lastName,
+        email,
+        companyName,
+        designation,
+      });
+      res.status(200).json({ message: "Profile updated successfully" });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ message: "Failed to update profile" });
     }
   },
 };
