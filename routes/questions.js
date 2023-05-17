@@ -7,7 +7,7 @@ const { verifyAuthToken } = require('../middleware/auth');
 // POST route to create a new question
 router.post('/',verifyAuthToken, questionController.createQuestion);
 //GET list of questions posted by user
-router.get('/', verifyAuthToken,questionController.retrieveQuestion);
+router.get('/user', verifyAuthToken,questionController.retrieveQuestion);
 // PATCH route to update an answer in the answer array
 router.patch('/answers/:questionId', questionController.updateAnswer);
 
