@@ -92,7 +92,8 @@ const fetchQuestions = async (req, res) => {
 
 const retrieveQuestion = async (req, res) => {
   try {
-    const questions = await Question.find({ postedBy: req.params.userId });
+    const { userId } = req.query;
+    const questions = await Question.find({ postedBy: userId });
 
     if (!questions) {
       return res.status(404).json({
