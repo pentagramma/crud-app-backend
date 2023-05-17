@@ -5,7 +5,9 @@ const userSchema = mongoose.Schema({
     lastName:{type:String,required:true},
     email:{type:String,required:true},
     password:{type:String,required:true},
-    imageUrl:{type:String}
+    imageUrl:{type:String},
+    companyName:{type:String},
+    designation:{type:String}
 })
 
 const UserModel = mongoose.model('Users',userSchema)
