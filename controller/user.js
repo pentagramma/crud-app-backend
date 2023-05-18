@@ -2,7 +2,7 @@ const UserModel = require("../model/user");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const RefreshToken = require("../model/RefreshToken");
-
+const path = require("path");
 module.exports = {
   createNewUser: async (req, res) => {
     try {
@@ -96,6 +96,7 @@ module.exports = {
       res.status(400).json({ message: err.message });
     }
   },
+
   updateUser: async (req, res) => {
     const { userId } = req.params;
     const { firstName, lastName, email, companyName, designation } = req.body;
@@ -113,5 +114,47 @@ module.exports = {
       console.error(error);
       res.status(500).json({ message: "Failed to update profile" });
     }
+  },
+
+  updateImageUrl: async (req, res) => {
+    if (!req.files) {
+      return res.status(400).json({ message: "No files were uploaded." });
+    }
+    const imageFile = req.files.image;
+    const userId = req.body.userId;
+
+    await UserModel.findById(userId)
+      .then((user) => {
+        if (!user) {
+          return res.status(404).json({ message: "User not found." });
+        }
+
+        const profilePicturePath = path.join(
+          __dirname,
+          "uploads",
+          imageFile.name
+        );
+        imageFile.mv(profilePicturePath, (error) => {
+          if (error) {
+            console.error(error);
+            return res
+              .status(500)
+              .json({ message: "Failed to save profile picture." });
+          }
+
+          user.imageUrl = profilePicturePath;
+
+          return user.save();
+        });
+      })
+      .then(() => {
+        res.json({ message: "Image uploaded and saved to the user profile." });
+      })
+      .catch((error) => {
+        console.error(error);
+        res
+          .status(500)
+          .json({ message: "Failed to save image to the user profile." });
+      });
   },
 };

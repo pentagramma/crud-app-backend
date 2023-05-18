@@ -5,13 +5,13 @@ const createQuestion = async (req, res) => {
   try {
     const { question, category } = req.body;
     const { _id } = req.user;
-
+    console.log(question,category,_id)
     const gpt_answer = await openai.createCompletion({
       model: "text-davinci-003",
       prompt: question,
       max_tokens: 512,
     });
-
+    console.log(gpt_answer)
     const newQuestion = await Question.create({
       question: question,
       category: category,
@@ -19,7 +19,7 @@ const createQuestion = async (req, res) => {
       gpt_answer: gpt_answer.data.choices[0].text.trim(),
       answers: [],
     });
-
+    console.log(newQuestion)
     res.status(201).json({
       message: "Question created successfully",
       question: newQuestion,
