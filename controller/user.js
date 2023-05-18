@@ -64,8 +64,9 @@ module.exports = {
   },
   getProfileDetail: async (req, res) => {
     try {
+      const user = await UserModel.findById(req.user._id);
       res.status(200).send({
-        user: req.user,
+        user: user,
       });
     } catch (e) {
       res.status(400).json({ message: err.message });
@@ -96,7 +97,6 @@ module.exports = {
     }
   },
   updateUser: async (req, res) => {
-    console.log("herer");
     const { userId } = req.params;
     const { firstName, lastName, email, companyName, designation } = req.body;
     try {
