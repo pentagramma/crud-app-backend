@@ -13,4 +13,6 @@ router.patch('/answers/:questionId', questionController.updateAnswer);
 
 router.get('/',verifyAuthToken,questionController.fetchQuestions);
 
+router.get('/:id',verifyAuthToken,questionController.fetchQuestionByID)
+
 module.exports = router;

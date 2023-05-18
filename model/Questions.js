@@ -12,7 +12,6 @@ const questionSchema = new mongoose.Schema(
       required: true,
     },
     gpt_answer: { type: String, required: true },
-    ans_count: { type: Number, required: true, default: 0 },
     likes: { type: Number, required: true, default: 0 },
     postedBy: {
       type: mongoose.Schema.Types.ObjectId,

@@ -37,7 +37,6 @@ const updateAnswer = async (req, res) => {
   try {
     const { questionId } = req.params;
     const { answer, postedBy } = req.body;
-    console.log(answer, postedBy);
     const updatedQuestion = await Question.findOneAndUpdate(
       { _id: questionId },
       {
@@ -50,7 +49,6 @@ const updateAnswer = async (req, res) => {
       },
       { new: true }
     );
-    console.log(updatedQuestion);
     if (!updatedQuestion) {
       return res.status(404).json({
         message: "Question not found",
@@ -72,13 +70,20 @@ const updateAnswer = async (req, res) => {
 
 const fetchQuestions = async (req, res) => {
   try {
+    let query = {};
     const { skip, limit } = req.query;
+    if (req.query.category) {
+      if (req.query.category !== "All") {
+        query.category = req.query.category;
+      }
+    }
     const skipValue = (skip - 1) * limit;
-    const questions = await Question.find()
+    const questions = await Question.find(query)
+      .sort({ createdAt: "desc" })
       .skip(skipValue)
       .limit(limit)
       .populate("postedBy");
-    const totalCount = await Question.find().count();
+    const totalCount = await Question.find(query).count();
     res.status(200).send({
       totalCount: totalCount,
       questions: questions,
@@ -116,9 +121,24 @@ const retrieveQuestion = async (req, res) => {
   }
 };
 
+const fetchQuestionByID = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const question = await Question.findOne({ _id: id }).populate("postedBy").populate("answers.postedBy");
+    res.status(200).send({
+      question:question
+    })
+  } catch (e) {
+    res.status(404).send({
+      error: e.message
+    })
+  }
+};
+
 module.exports = {
   createQuestion,
   updateAnswer,
   fetchQuestions,
   retrieveQuestion,
+  fetchQuestionByID,
 };
