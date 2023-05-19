@@ -153,40 +153,22 @@ const likeQuestion = async (req, res) => {
     const { questionId } = req.params;
     const { userId } = req.body;
     const question = await Question.findById(questionId);
-  
-    if (typeof question.likes !== "undefined") {
-     
-      const userExists = question.likes.includes(userId);
-      if (!userExists) {
-        console.log("user has not liked this post")
-        question.likes.push(userId);
-        await question.save();
-        
-      }
-      console.log(question)
-      const user = await User.findById(userId);
 
-      if (!user.likedQuestions.includes(questionId)) {
-        user.likedQuestions.push(questionId);
-        await user.save();
-      }
-
-      res.status(200).json(question);
-    } else {
-      console.log("no")
-      
-  //     question.likes = [];
-  //     question.likes.push(userId);
-  // console.log(question)
-  //     await question.save();
-  //     const user = await User.findById(userId);
- 
-  //     if (!user.likedQuestions.includes(questionId)) {
-  //       user.likedQuestions.push(questionId);
-  //       await user.save();
-  //     }
-  //     res.status(200).json(question);
+    const userExists = question.likes.includes(userId);
+    if (!userExists) {
+      console.log("user has not liked this post");
+      question.likes.push(userId);
+      await question.save();
     }
+    console.log(question);
+    const user = await User.findById(userId);
+
+    if (!user.likedQuestions.includes(questionId)) {
+      user.likedQuestions.push(questionId);
+      await user.save();
+    }
+
+    res.status(200).json(question);
   } catch (error) {
     res.status(500).json({ message: "Error liking question", error });
   }
@@ -194,16 +176,17 @@ const likeQuestion = async (req, res) => {
 
 const likeAnswer = async (req, res) => {
   try {
+    console.log("here")
     const { questionId, answerId } = req.params;
     const { userId } = req.body; // Assuming you have the authenticated user's ID
 
-    // Update the likes array of the answer and push the user's ID
+   // Update the likes array of the answer and push the user's ID
     const question = await Question.findOneAndUpdate(
       { _id: questionId, "answers._id": answerId },
       { $addToSet: { "answers.$.likes": userId } },
       { new: true }
     );
-
+    console.log(question)
     // Update the user's likedAnswers array
     await User.findByIdAndUpdate(
       userId,
