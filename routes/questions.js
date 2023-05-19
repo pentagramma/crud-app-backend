@@ -14,5 +14,7 @@ router.patch('/answers/:questionId', questionController.updateAnswer);
 router.get('/',verifyAuthToken,questionController.fetchQuestions);
 
 router.get('/:id',verifyAuthToken,questionController.fetchQuestionByID)
+//GET route to get answers given by users
+router.get('/answers/user',verifyAuthToken,questionController.retrieveAnswerByUserId)
 
 module.exports = router;

@@ -5,13 +5,13 @@ const createQuestion = async (req, res) => {
   try {
     const { question, category } = req.body;
     const { _id } = req.user;
-    console.log(question,category,_id)
+    console.log(question, category, _id);
     const gpt_answer = await openai.createCompletion({
       model: "text-davinci-003",
       prompt: question,
       max_tokens: 512,
     });
-    console.log(gpt_answer)
+    console.log(gpt_answer);
     const newQuestion = await Question.create({
       question: question,
       category: category,
@@ -19,7 +19,7 @@ const createQuestion = async (req, res) => {
       gpt_answer: gpt_answer.data.choices[0].text.trim(),
       answers: [],
     });
-    console.log(newQuestion)
+    console.log(newQuestion);
     res.status(201).json({
       message: "Question created successfully",
       question: newQuestion,
@@ -110,8 +110,6 @@ const retrieveQuestion = async (req, res) => {
       message: "Questions retrieved successfully",
       questions: questions,
     });
-
-    console.log(questions);
   } catch (err) {
     console.log(err);
     res.status(500).json({
@@ -124,14 +122,34 @@ const retrieveQuestion = async (req, res) => {
 const fetchQuestionByID = async (req, res) => {
   try {
     const id = req.params.id;
-    const question = await Question.findOne({ _id: id }).populate("postedBy").populate("answers.postedBy");
+    const question = await Question.findOne({ _id: id })
+      .populate("postedBy")
+      .populate("answers.postedBy");
     res.status(200).send({
-      question:question
-    })
+      question: question,
+    });
   } catch (e) {
     res.status(404).send({
-      error: e.message
-    })
+      error: e.message,
+    });
+  }
+};
+
+const retrieveAnswerByUserId = async (req, res) => {
+  const { userId } = req.query;
+  try {
+    //const questions = await Question.find({ "answers.postedBy": userId });
+    const questions = await Question.find({ "answers.postedBy": userId })
+    .populate("answers.postedBy", "firstName lastName") // Populate answer details with firstName and lastName
+    .exec();
+    res.json(questions);
+    // const answers = await Question.find(
+    //   { "answers.postedBy": userId },
+    //   "answers"
+    // );
+    // res.json(answers);
+  } catch (error) {
+    res.status(500).json({ message: "Error retrieving answers", error });
   }
 };
 
@@ -141,4 +159,5 @@ module.exports = {
   fetchQuestions,
   retrieveQuestion,
   fetchQuestionByID,
+  retrieveAnswerByUserId,
 };
