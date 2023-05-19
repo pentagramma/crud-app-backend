@@ -160,6 +160,11 @@ const likeQuestion = async (req, res) => {
       question.likes.push(userId);
       await question.save();
     }
+    // else{
+    //   const updatedQuestion =  question.likes.filter(each=>each !== userId)
+    //   question.likes = updatedQuestion
+    //   await question.save()
+    // }
     console.log(question);
     const user = await User.findById(userId);
 
@@ -167,6 +172,11 @@ const likeQuestion = async (req, res) => {
       user.likedQuestions.push(questionId);
       await user.save();
     }
+    // else{
+    //   const updatedUser =  user.likedQuestions.filter(each=>each !== questionId)
+    //   user.likedQuestions = updatedUser
+    //   await user.save()
+    // }
 
     res.status(200).json(question);
   } catch (error) {
