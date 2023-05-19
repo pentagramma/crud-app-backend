@@ -153,9 +153,9 @@ const likeQuestion = async (req, res) => {
     const { questionId } = req.params;
     const { userId } = req.body;
     const question = await Question.findById(questionId);
-     console.log(userId);
+  
     if (typeof question.likes !== "undefined") {
-      console.log("yes")
+     
       const userExists = question.likes.includes(userId);
       if (!userExists) {
         console.log("user has not liked this post")
