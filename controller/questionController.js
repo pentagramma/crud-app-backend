@@ -1,5 +1,6 @@
 const Question = require("../model/Questions");
 const { openai } = require("../utils/openaiConfiguration");
+const User = require("../model/user");
 
 const createQuestion = async (req, res) => {
   try {
@@ -138,18 +139,81 @@ const fetchQuestionByID = async (req, res) => {
 const retrieveAnswerByUserId = async (req, res) => {
   const { userId } = req.query;
   try {
-    //const questions = await Question.find({ "answers.postedBy": userId });
     const questions = await Question.find({ "answers.postedBy": userId })
-    .populate("answers.postedBy", "firstName lastName") // Populate answer details with firstName and lastName
-    .exec();
+      .populate("answers.postedBy", "firstName lastName") // Populate answer details with firstName and lastName
+      .exec();
     res.json(questions);
-    // const answers = await Question.find(
-    //   { "answers.postedBy": userId },
-    //   "answers"
-    // );
-    // res.json(answers);
   } catch (error) {
     res.status(500).json({ message: "Error retrieving answers", error });
+  }
+};
+
+const likeQuestion = async (req, res) => {
+  try {
+    const { questionId } = req.params;
+    const { userId } = req.body;
+    const question = await Question.findById(questionId);
+     console.log(userId);
+    if (typeof question.likes !== "undefined") {
+      console.log("yes")
+      const userExists = question.likes.includes(userId);
+      if (!userExists) {
+        console.log("user has not liked this post")
+        question.likes.push(userId);
+        await question.save();
+        
+      }
+      console.log(question)
+      const user = await User.findById(userId);
+
+      if (!user.likedQuestions.includes(questionId)) {
+        user.likedQuestions.push(questionId);
+        await user.save();
+      }
+
+      res.status(200).json(question);
+    } else {
+      console.log("no")
+      
+  //     question.likes = [];
+  //     question.likes.push(userId);
+  // console.log(question)
+  //     await question.save();
+  //     const user = await User.findById(userId);
+ 
+  //     if (!user.likedQuestions.includes(questionId)) {
+  //       user.likedQuestions.push(questionId);
+  //       await user.save();
+  //     }
+  //     res.status(200).json(question);
+    }
+  } catch (error) {
+    res.status(500).json({ message: "Error liking question", error });
+  }
+};
+
+const likeAnswer = async (req, res) => {
+  try {
+    const { questionId, answerId } = req.params;
+    const { userId } = req.body; // Assuming you have the authenticated user's ID
+
+    // Update the likes array of the answer and push the user's ID
+    const question = await Question.findOneAndUpdate(
+      { _id: questionId, "answers._id": answerId },
+      { $addToSet: { "answers.$.likes": userId } },
+      { new: true }
+    );
+
+    // Update the user's likedAnswers array
+    await User.findByIdAndUpdate(
+      userId,
+      { $addToSet: { likedAnswers: answerId } },
+      { new: true }
+    );
+
+    res.status(200).json(question);
+  } catch (error) {
+    res.status(500).json({ message: "Error liking answer", error });
   }
 };
 
@@ -160,4 +224,6 @@ module.exports = {
   retrieveQuestion,
   fetchQuestionByID,
   retrieveAnswerByUserId,
+  likeQuestion,
+  likeAnswer,
 };

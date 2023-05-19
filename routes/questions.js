@@ -16,5 +16,7 @@ router.get('/',verifyAuthToken,questionController.fetchQuestions);
 router.get('/:id',verifyAuthToken,questionController.fetchQuestionByID)
 //GET route to get answers given by users
 router.get('/answers/user',verifyAuthToken,questionController.retrieveAnswerByUserId)
+router.post('/:questionId/like',verifyAuthToken, questionController.likeQuestion);
+router.post('/:questionId/answers/:answerId/like',verifyAuthToken, questionController.likeAnswer);
 
 module.exports = router;
