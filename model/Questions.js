@@ -12,7 +12,13 @@ const questionSchema = new mongoose.Schema(
       required: true,
     },
     gpt_answer: { type: String, required: true },
-    likes: { type: Number, required: true, default: 0 },
+    likes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        required:true
+      },
+    ],
     postedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Users",
@@ -33,10 +39,12 @@ const questionSchema = new mongoose.Schema(
           type: Date,
           default: Date.now,
         },
-        likes: {
-          type: Number,
-          default: 0,
-        },
+        likes: [
+          {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "User",
+          },
+        ],
       },
     ],
   },
