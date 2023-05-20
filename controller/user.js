@@ -54,6 +54,7 @@ module.exports = {
         status: "success",
         token: token,
         refresh_token: refresh_token,
+        user:user
       });
     } catch (e) {
       res.status(404).send({

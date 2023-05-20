@@ -154,6 +154,7 @@ const likeQuestion = async (req, res) => {
     const { questionId } = req.params;
     const { userId } = req.body;
     const question = await Question.findById(questionId);
+    
 
     const userExists = question.likes.includes(userId);
     if (!userExists) {
@@ -165,8 +166,7 @@ const likeQuestion = async (req, res) => {
       question.likes = updatedQuestion
       await question.save()
     }
-    const user = await User.findById(userId);
-
+    const user = await UserModel.findById(userId);
     if (!user.likedQuestions.includes(questionId)) {
       user.likedQuestions.push(questionId);
       await user.save();
@@ -179,6 +179,7 @@ const likeQuestion = async (req, res) => {
 
     res.status(200).json({question,user});
   } catch (error) {
+    console.log(error)
     res.status(500).json({ message: "Error liking question", error });
   }
 };
@@ -186,32 +187,34 @@ const likeQuestion = async (req, res) => {
 const likeAnswer = async (req, res) => {
   try {
     const { questionId, answerId } = req.params;
-    const { userId } = req.body; // Assuming you have the authenticated user's ID
-
-   // Update the likes array of the answer and push the user's ID
+    const { userId } = req.body; 
     const question = await Question.findOne(
-      { _id: questionId, "answers._id": answerId }
-      // { $addToSet: { "answers.$.likes": userId } },
-      // { new: true }
+      { _id: questionId}
     );
-    const userExist = question.likes.includes(userId)
+    const answer = question.answers.filter(each => each._id == answerId)[0]
+    const userExist = answer.likes.includes(userId)
     if(!userExist){
-      question.likes.push(userId);
+      answer.likes.push(userId);
+      question.answers.map(each => {
+        if(each._id == answerId){
+          return answer
+        }
+        return each
+      })
       await question.save();
     }
     else{
-      const updatedQuestion =  question.likes.filter(each=> each != userId)
-      question.likes = updatedQuestion
+      const updatedAnswer =  answer.likes.filter(each=> each != userId)
+      answer.likes = updatedAnswer
+      question.answers.map(each => {
+        if(each._id == answerId){
+          return answer
+        }
+        return each
+      })
       await question.save()
     }
-    console.log(question)
-    // Update the user's likedAnswers array
-    const user = await User.findById(userId);
-    // await User.findByIdAndUpdate(
-    //   userId,
-    //   { $addToSet: { likedAnswers: answerId } },
-    //   { new: true }
-    // );
+    const user = await UserModel.findById(userId);
     if (!user.likedAnswers.includes(answerId)) {
       user.likedAnswers.push(answerId);
       await user.save();
@@ -221,8 +224,7 @@ const likeAnswer = async (req, res) => {
       user.likedAnswers = updatedUser
       await user.save()
     }
-
-    res.status(200).json(question);
+    res.status(200).json({question,user});
   } catch (error) {
     res.status(500).json({ message: "Error liking answer", error });
   }
