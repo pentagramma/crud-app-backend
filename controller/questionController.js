@@ -156,29 +156,27 @@ const likeQuestion = async (req, res) => {
 
     const userExists = question.likes.includes(userId);
     if (!userExists) {
-      console.log("user has not liked this post");
       question.likes.push(userId);
       await question.save();
     }
-    // else{
-    //   const updatedQuestion =  question.likes.filter(each=>each !== userId)
-    //   question.likes = updatedQuestion
-    //   await question.save()
-    // }
-    console.log(question);
+    else{
+      const updatedQuestion =  question.likes.filter(each=> each != userId)
+      question.likes = updatedQuestion
+      await question.save()
+    }
     const user = await User.findById(userId);
 
     if (!user.likedQuestions.includes(questionId)) {
       user.likedQuestions.push(questionId);
       await user.save();
     }
-    // else{
-    //   const updatedUser =  user.likedQuestions.filter(each=>each !== questionId)
-    //   user.likedQuestions = updatedUser
-    //   await user.save()
-    // }
+    else{
+      const updatedUser =  user.likedQuestions.filter(each=>each != questionId)
+      user.likedQuestions = updatedUser
+      await user.save()
+    }
 
-    res.status(200).json(question);
+    res.status(200).json({question,user});
   } catch (error) {
     res.status(500).json({ message: "Error liking question", error });
   }
@@ -186,23 +184,42 @@ const likeQuestion = async (req, res) => {
 
 const likeAnswer = async (req, res) => {
   try {
-    console.log("here")
     const { questionId, answerId } = req.params;
     const { userId } = req.body; // Assuming you have the authenticated user's ID
 
    // Update the likes array of the answer and push the user's ID
-    const question = await Question.findOneAndUpdate(
-      { _id: questionId, "answers._id": answerId },
-      { $addToSet: { "answers.$.likes": userId } },
-      { new: true }
+    const question = await Question.findOne(
+      { _id: questionId, "answers._id": answerId }
+      // { $addToSet: { "answers.$.likes": userId } },
+      // { new: true }
     );
+    const userExist = question.likes.includes(userId)
+    if(!userExist){
+      question.likes.push(userId);
+      await question.save();
+    }
+    else{
+      const updatedQuestion =  question.likes.filter(each=> each != userId)
+      question.likes = updatedQuestion
+      await question.save()
+    }
     console.log(question)
     // Update the user's likedAnswers array
-    await User.findByIdAndUpdate(
-      userId,
-      { $addToSet: { likedAnswers: answerId } },
-      { new: true }
-    );
+    const user = await User.findById(userId);
+    // await User.findByIdAndUpdate(
+    //   userId,
+    //   { $addToSet: { likedAnswers: answerId } },
+    //   { new: true }
+    // );
+    if (!user.likedAnswers.includes(answerId)) {
+      user.likedAnswers.push(answerId);
+      await user.save();
+    }
+    else{
+      const updatedUser =  user.likedAnswers.filter(each=>each != answerId)
+      user.likedAnswers = updatedUser
+      await user.save()
+    }
 
     res.status(200).json(question);
   } catch (error) {
