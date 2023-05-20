@@ -1,18 +1,19 @@
 const Question = require("../model/Questions");
 const { openai } = require("../utils/openaiConfiguration");
-const User = require("../model/user");
+//const User = require("../model/user");
+const UserModel = require("../model/user");
 
 const createQuestion = async (req, res) => {
   try {
     const { question, category } = req.body;
     const { _id } = req.user;
-    console.log(question, category, _id);
+   
     const gpt_answer = await openai.createCompletion({
       model: "text-davinci-003",
       prompt: question,
       max_tokens: 512,
     });
-    console.log(gpt_answer);
+ 
     const newQuestion = await Question.create({
       question: question,
       category: category,
@@ -20,7 +21,7 @@ const createQuestion = async (req, res) => {
       gpt_answer: gpt_answer.data.choices[0].text.trim(),
       answers: [],
     });
-    console.log(newQuestion);
+  
     res.status(201).json({
       message: "Question created successfully",
       question: newQuestion,
@@ -140,7 +141,7 @@ const retrieveAnswerByUserId = async (req, res) => {
   const { userId } = req.query;
   try {
     const questions = await Question.find({ "answers.postedBy": userId })
-      .populate("answers.postedBy", "firstName lastName") // Populate answer details with firstName and lastName
+      .populate("answers.postedBy", "firstName lastName")
       .exec();
     res.json(questions);
   } catch (error) {
@@ -165,8 +166,8 @@ const likeQuestion = async (req, res) => {
     //   question.likes = updatedQuestion
     //   await question.save()
     // }
-    console.log(question);
-    const user = await User.findById(userId);
+   
+    const user = await UserModel.findById(userId);
 
     if (!user.likedQuestions.includes(questionId)) {
       user.likedQuestions.push(questionId);
@@ -186,19 +187,19 @@ const likeQuestion = async (req, res) => {
 
 const likeAnswer = async (req, res) => {
   try {
-    console.log("here")
+
     const { questionId, answerId } = req.params;
     const { userId } = req.body; // Assuming you have the authenticated user's ID
 
-   // Update the likes array of the answer and push the user's ID
+    // Update the likes array of the answer and push the user's ID
     const question = await Question.findOneAndUpdate(
       { _id: questionId, "answers._id": answerId },
       { $addToSet: { "answers.$.likes": userId } },
       { new: true }
     );
-    console.log(question)
+ 
     // Update the user's likedAnswers array
-    await User.findByIdAndUpdate(
+    await UserModel.findByIdAndUpdate(
       userId,
       { $addToSet: { likedAnswers: answerId } },
       { new: true }
@@ -207,6 +208,22 @@ const likeAnswer = async (req, res) => {
     res.status(200).json(question);
   } catch (error) {
     res.status(500).json({ message: "Error liking answer", error });
+  }
+};
+
+const getUsersWhoLiked = async (req, res) => {
+  try {
+    const questionId = req.params.questionId;
+    let question = await Question.findById(questionId);
+    question = question.likes;
+    const likedUsers = await UserModel.find(
+      { _id: { $in: question } },
+      "firstName lastName email imageUrl"
+    );
+    res.status(200).json(likedUsers);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
@@ -219,4 +236,5 @@ module.exports = {
   retrieveAnswerByUserId,
   likeQuestion,
   likeAnswer,
+  getUsersWhoLiked,
 };
