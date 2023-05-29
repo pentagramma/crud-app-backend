@@ -54,7 +54,7 @@ module.exports = {
         status: "success",
         token: token,
         refresh_token: refresh_token,
-        user:user
+        user: user,
       });
     } catch (e) {
       res.status(404).send({
@@ -100,15 +100,9 @@ module.exports = {
 
   updateUser: async (req, res) => {
     const { userId } = req.params;
-    const { firstName, lastName, email, companyName, designation } = req.body;
     try {
-      console.log(req.body);
-      await UserModel.findByIdAndUpdate(userId, {
-        firstName,
-        lastName,
-        email,
-        companyName,
-        designation,
+      const user = await UserModel.findByIdAndUpdate(userId, req.body, {
+        new: true,
       });
       res.status(200).json({ message: "Profile updated successfully" });
     } catch (error) {
