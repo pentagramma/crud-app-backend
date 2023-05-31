@@ -2,6 +2,7 @@ const Question = require("../model/Questions");
 const { openai } = require("../utils/openaiConfiguration");
 //const User = require("../model/user");
 const UserModel = require("../model/user");
+const { commonWords } = require("../utils/commonWords");
 
 const createQuestion = async (req, res) => {
   try {
@@ -246,6 +247,34 @@ const getUsersWhoLiked = async (req, res) => {
   }
 };
 
+const fetchSearchedQuestions = async (req,res)=>{
+  try{
+    const searchedString = req.params.search
+    const searchArray = searchedString.split(' ')
+    const filteredArray = searchArray.filter(each=> !(commonWords.includes(each.toLowerCase())))
+    console.log(filteredArray)
+    let finalArray = []
+    let idArray = []
+    for(let each=0;each<filteredArray.length;each++) {
+      const arr = await Question.find({$text:{$search:filteredArray[each],$caseSensitive:false}}).populate("postedBy");
+      arr.forEach(x => {
+        if(!(idArray.includes(x.question))){
+          idArray.push(x.question)
+          finalArray.push(x);
+        }
+      })
+    }
+    console.log(idArray)
+    res.status(200).send({
+      searchedQuestions: finalArray
+    })
+  }
+  catch(e){
+    console.log(e)
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
 module.exports = {
   createQuestion,
   updateAnswer,
@@ -256,4 +285,5 @@ module.exports = {
   likeQuestion,
   likeAnswer,
   getUsersWhoLiked,
+  fetchSearchedQuestions
 };
