@@ -50,7 +50,7 @@ const questionSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
-
+questionSchema.index({question:"text"})
 const Question = mongoose.model("Question", questionSchema);
 
 module.exports = Question;

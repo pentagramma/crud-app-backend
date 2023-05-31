@@ -19,4 +19,5 @@ router.get('/answers/user',verifyAuthToken,questionController.retrieveAnswerByUs
 router.post('/:questionId/like',verifyAuthToken, questionController.likeQuestion);
 router.post('/:questionId/answers/:answerId/like',verifyAuthToken, questionController.likeAnswer);
 router.get('/likes/:questionId',verifyAuthToken,questionController.getUsersWhoLiked)
+router.get('/search/:search',questionController.fetchSearchedQuestions)
 module.exports = router;
