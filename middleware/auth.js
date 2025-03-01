@@ -5,8 +5,10 @@ const verifyAuthToken = async (req,res,next)=>{
         const token = req.header('token');
         const verified = jwt.verify(token,process.env.JWT_SECRET);
         req.user = verified;
+        console.log("completed");
         next();
     }catch(err){
+      console.log("here")
       return res.status(400).json({
         message:err.message
       })

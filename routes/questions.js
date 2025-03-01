@@ -4,6 +4,7 @@ const router = express.Router();
 const questionController = require('../controller/questionController');
 const { verifyAuthToken } = require('../middleware/auth');
 
+
 // POST route to create a new question
 router.post('/',verifyAuthToken, questionController.createQuestion);
 //GET list of questions posted by user
@@ -20,4 +21,6 @@ router.post('/:questionId/like',verifyAuthToken, questionController.likeQuestion
 router.post('/:questionId/answers/:answerId/like',verifyAuthToken, questionController.likeAnswer);
 router.get('/likes/:questionId',verifyAuthToken,questionController.getUsersWhoLiked)
 router.get('/search/:search',questionController.fetchSearchedQuestions)
+router.patch('/edit/:questionId', questionController.editQuestion);
+router.delete('/:questionId', verifyAuthToken, questionController.deleteQuestion);
 module.exports = router;

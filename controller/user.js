@@ -93,7 +93,7 @@ module.exports = {
         message: "new token generated",
         token: authToken,
       });
-    } catch (e) {
+    } catch (err) {
       res.status(400).json({ message: err.message });
     }
   },

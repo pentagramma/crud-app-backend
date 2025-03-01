@@ -4,14 +4,16 @@ const questionSchema = new mongoose.Schema(
   {
     question: {
       type: String,
-      required: true,
     },
     category: {
       type: String,
-      enum: ["Technology", "Philosophy", "Business", "Other"],
-      required: true,
+      enum: ["Technology", "Philosophy", "Business", "Other", ""],
+      default: "",
     },
-    gpt_answer: { type: String, required: true },
+    imageUrl: {
+      type: String,
+      default: true  
+    },
     likes: [
       {
         type: mongoose.Schema.Types.ObjectId,

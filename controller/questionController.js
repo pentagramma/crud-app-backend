@@ -1,41 +1,138 @@
 const Question = require("../model/Questions");
-const { openai } = require("../utils/openaiConfiguration");
 //const User = require("../model/user");
 const UserModel = require("../model/user");
 const { commonWords } = require("../utils/commonWords");
+const AWS = require('aws-sdk');
+const { v4: uuidv4 } = require('uuid');
+
+AWS.config.update({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: process.env.AWS_REGION
+});
+
+const s3 = new AWS.S3();
+
 
 const createQuestion = async (req, res) => {
   try {
-    const { question, category } = req.body;
+    const { question, category, image } = req.body;
     const { _id } = req.user;
-   
-    const gpt_answer = await openai.createCompletion({
-      model: "text-davinci-003",
-      prompt: question,
-      max_tokens: 512,
-    });
- 
+
+    let imageUrl = null;
+
+    if (image) {
+      // Remove the data:image/jpeg;base64, part
+      const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+      const buffer = Buffer.from(base64Data, 'base64');
+
+      const params = {
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: `${uuidv4()}.jpg`,
+        Body: buffer,
+        ContentType: 'image/jpeg',
+        ACL: 'public-read'
+      };
+
+      const uploadResult = await s3.upload(params).promise();
+      imageUrl = uploadResult.Location;
+    }
+
+
     const newQuestion = await Question.create({
-      question: question,
-      category: category,
+      question: question || "",
+      category: category || "",
       postedBy: _id,
-      gpt_answer: gpt_answer.data.choices[0].text.trim(),
       answers: [],
+      imageUrl: imageUrl 
     });
-  
-    res.status(201).json({
+
+    res.status(200).json({
       message: "Question created successfully",
       question: newQuestion,
     });
   } catch (err) {
+    console.error(err);
     res.status(500).json({
       message: "Something went wrong",
-      error: err,
+      error: err.message,
     });
   }
 };
 
-// Controller function to update an answer in the answer array
+const editQuestion = async (req, res) => {
+  try {
+    const { questionId } = req.params;
+    const { question, category, image, _id } = req.body;
+
+    console.log('Received question data:', { questionId, question, category, _id });
+    console.log('Image data received:', image ? 'Image data present' : 'No image data');
+
+    let questionToUpdate = await Question.findById(questionId);
+
+    if (!questionToUpdate) {
+      return res.status(404).json({
+        message: "Question not found",
+      });
+    }
+
+    if (questionToUpdate.postedBy.toString() !== _id.toString()) {
+      return res.status(403).json({
+        message: "You are not authorized to edit this question",
+      });
+    }
+
+    if (question) questionToUpdate.question = question;
+    if (category) questionToUpdate.category = category;
+
+    if (image) {
+      if (image.startsWith('data:image')) {
+        // Remove the data:image/jpeg;base64, part
+        const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
+        const buffer = Buffer.from(base64Data, 'base64');
+
+        const params = {
+          Bucket: process.env.S3_BUCKET_NAME,
+          Key: `${uuidv4()}.jpg`,
+          Body: buffer,
+          ContentType: 'image/jpeg',
+          ACL: 'public-read'
+        };
+
+        try {
+          const uploadResult = await s3.upload(params).promise();
+          questionToUpdate.imageUrl = uploadResult.Location;
+          console.log('New image URL:', questionToUpdate.imageUrl);
+        } catch (uploadError) {
+          console.error('S3 upload error:', uploadError);
+          return res.status(500).json({
+            message: "Error uploading image",
+            error: uploadError.message,
+          });
+        }
+      } else {
+        // If it's not a base64 string, assume it's a URL and update directly
+        questionToUpdate.imageUrl = image;
+      }
+    }
+
+    // Save the updated question
+    const updatedQuestion = await questionToUpdate.save();
+    console.log('Updated question:', updatedQuestion);
+
+    res.status(200).json({
+      message: "Question updated successfully",
+      question: updatedQuestion,
+    });
+  } catch (err) {
+    console.error('Unexpected error:', err);
+    res.status(500).json({
+      message: "An unexpected error occurred",
+      error: err.message,
+    });
+  }
+};
+
 const updateAnswer = async (req, res) => {
   try {
     const { questionId } = req.params;
@@ -124,19 +221,40 @@ const retrieveQuestion = async (req, res) => {
 
 const fetchQuestionByID = async (req, res) => {
   try {
-    const id = req.params.id;
+    const { id } = req.params;
     const question = await Question.findOne({ _id: id })
-      .populate("postedBy")
-      .populate("answers.postedBy");
+    .populate("postedBy")
+    .populate("answers.postedBy");
+    console.log(question)
+    console.log("question")
     res.status(200).send({
       question: question,
+
     });
   } catch (e) {
+    console.log("here1")
     res.status(404).send({
       error: e.message,
     });
   }
 };
+
+// const fetchQuestionByID = async (req, res) => {
+//   try {
+//     const id = req.params.id;
+//     const question = await Question.findOne({ _id: id })
+//       .populate("postedBy")
+//       .populate("answers.postedBy");
+//     res.status(200).send({
+//       question: question,
+//     });
+//   } catch (e) {
+//     res.status(404).send({
+//       error: e.message,
+//     });
+//   }
+// };
+
 
 const retrieveAnswerByUserId = async (req, res) => {
   const { userId } = req.query;
@@ -275,6 +393,50 @@ const fetchSearchedQuestions = async (req,res)=>{
   }
 }
 
+const deleteQuestion = async (req, res) => {
+  try {
+    const { questionId } = req.params;
+    const { _id } = req.user; // Assuming you have user information in the request
+
+    const question = await Question.findById(questionId);
+
+    if (!question) {
+      return res.status(404).json({
+        message: "Question not found",
+      });
+    }
+
+    if (question.postedBy.toString() !== _id.toString()) {
+      return res.status(403).json({
+        message: "You are not authorized to delete this question",
+      });
+    }
+
+    // If the question has an image, delete it from S3
+    if (question.imageUrl) {
+      const key = question.imageUrl.split('/').pop();
+      const params = {
+        Bucket: process.env.S3_BUCKET_NAME,
+        Key: key
+      };
+
+      await s3.deleteObject(params).promise();
+    }
+
+    await Question.findByIdAndDelete(questionId);
+
+    res.status(200).json({
+      message: "Question deleted successfully",
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({
+      message: "An error occurred while deleting the question",
+      error: err.message,
+    });
+  }
+};
+
 module.exports = {
   createQuestion,
   updateAnswer,
@@ -285,5 +447,7 @@ module.exports = {
   likeQuestion,
   likeAnswer,
   getUsersWhoLiked,
-  fetchSearchedQuestions
+  fetchSearchedQuestions,
+  editQuestion,
+  deleteQuestion
 };
